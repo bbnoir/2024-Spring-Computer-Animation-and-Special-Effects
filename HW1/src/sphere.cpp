@@ -123,6 +123,39 @@ void Spheres::collide(Cloth* cloth) {
   //   1. There are `sphereCount` spheres (sphereCount is 1 in the default scene).
   //   2. There are `particlesPerEdge * particlesPerEdge` particles.
   //   3. See TODOs in Cloth::computeSpringForce if you don't know how to access data.
-}
+    for (int i = 0; i < sphereCount; ++i) {
+      for (int j = 0; j < particlesPerEdge * particlesPerEdge; ++j) {
+        Eigen::Vector4f pos = cloth->particles().position(j);
+        float radius = _radius[i];
+        Eigen::Vector4f vel = cloth->particles().velocity(j);
+        Eigen::Vector4f acc = cloth->particles().acceleration(j);
+        float clothMass = cloth->particles().mass(j);
+        float sphereMass = _particles.mass(i);
 
-void Spheres::setVelocity(int i, const Eigen::Vector4f vel) { _particles.velocity(i) = vel; }
+        Eigen::Vector4f dist = pos - _particles.position(i);
+        float distNorm = dist.norm();
+
+        float correction = 0.01f;
+        if (distNorm - radius < correction) {
+          Eigen::Vector4f normal = dist.normalized();
+          Eigen::Vector4f relativeVel = vel - _particles.velocity(i);
+          float relativeVelNorm = relativeVel.dot(normal);
+          if (relativeVelNorm < 0) {
+            Eigen::Vector4f normalVelj = vel.dot(normal) * normal;
+            Eigen::Vector4f tangentVelj = vel - normalVelj;
+            Eigen::Vector4f normalVeli = _particles.velocity(i).dot(normal) * normal;
+            Eigen::Vector4f tangentVeli = _particles.velocity(i) - normalVeli;
+
+            Eigen::Vector4f vb = (normalVeli * sphereMass + normalVelj * clothMass + coefRestitution * sphereMass * (normalVeli - normalVelj)) / (sphereMass + clothMass);
+            cloth->particles().velocity(j) = tangentVelj + vb;
+
+            // correction
+            Eigen::Vector4f correctionVec = (correction - distNorm + radius) * normal;
+            cloth->particles().position(j) += correctionVec;
+          }
+        }
+      }
+    }
+  }
+
+  void Spheres::setVelocity(int i, const Eigen::Vector4f vel) { _particles.velocity(i) = vel; }
