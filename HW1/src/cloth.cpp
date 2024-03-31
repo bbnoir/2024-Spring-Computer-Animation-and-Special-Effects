@@ -109,11 +109,49 @@ void Cloth::initializeSpring() {
   //   ... ... particlesPerEdge * particlesPerEdge - 1
   //   ===============================================
   // Here is a simple example which connects the horizontal structrual springs.
+
+  // Structural springs
   float structrualLength = (_particles.position(0) - _particles.position(1)).norm();
   for (int i = 0; i < particlesPerEdge; ++i) {
     for (int j = 0; j < particlesPerEdge - 1; ++j) {
       int index = i * particlesPerEdge + j;
       _springs.emplace_back(index, index + 1, structrualLength, Spring::Type::STRUCTURAL);
+    }
+  }
+  for (int i = 0; i < particlesPerEdge - 1; ++i) {
+    for (int j = 0; j < particlesPerEdge; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + particlesPerEdge, structrualLength, Spring::Type::STRUCTURAL);
+    }
+  }
+
+  // Shear springs
+  float shearLength = (_particles.position(0) - _particles.position(particlesPerEdge + 1)).norm();
+  for (int i = 0; i < particlesPerEdge - 1; ++i) {
+    for (int j = 0; j < particlesPerEdge - 1; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + particlesPerEdge + 1, shearLength, Spring::Type::SHEAR);
+    }
+  }
+  for (int i = 0; i < particlesPerEdge - 1; ++i) {
+    for (int j = 1; j < particlesPerEdge; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + particlesPerEdge - 1, shearLength, Spring::Type::SHEAR);
+    }
+  }
+
+  // Bend springs
+  float bendLength = (_particles.position(0) - _particles.position(2)).norm();
+  for (int i = 0; i < particlesPerEdge; ++i) {
+    for (int j = 0; j < particlesPerEdge - 2; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + 2, bendLength, Spring::Type::BEND);
+    }
+  }
+  for (int i = 0; i < particlesPerEdge - 2; ++i) {
+    for (int j = 0; j < particlesPerEdge; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + 2 * particlesPerEdge, bendLength, Spring::Type::BEND);
     }
   }
 
