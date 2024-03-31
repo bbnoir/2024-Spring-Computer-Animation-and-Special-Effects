@@ -49,6 +49,20 @@ void MidpointEuler::integrate(const std::vector<Particles *> &particles,
   //   3. Compute refined Xn+1 using (1.) and (2.).
   // Note:
   //   1. Use simulateOneStep with modified position and velocity to get Xn+1.
+  std::vector<Eigen::Matrix4Xf> oriPositions, oriVelocitys;
+  for (auto &particle : particles) {
+    oriPositions.push_back(particle->position());
+    oriVelocitys.push_back(particle->velocity());
+  }
+  for (auto &particle : particles) {
+    particle->position() += particle->velocity() * deltaTime * 0.5f;
+    particle->velocity() += particle->acceleration() * deltaTime * 0.5f;
+  }
+  simulateOneStep();
+  for (auto &particle : particles) {
+    particle->position() = oriPositions[&particle - &particles[0]] + deltaTime * particle->velocity();
+    particle->velocity() = oriVelocitys[&particle - &particles[0]] + deltaTime * particle->acceleration();
+  }
 }
 
 void RungeKuttaFourth::integrate(const std::vector<Particles *> &particles,
