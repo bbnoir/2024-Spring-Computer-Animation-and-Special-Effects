@@ -30,7 +30,7 @@ void renderDrawingTypes() {
 }
 
 void renderMainPanel() {
-  ImGui::SetNextWindowSize(ImVec2(450.0f, 300.0f), ImGuiCond_Once);
+  ImGui::SetNextWindowSize(ImVec2(450.0f, 320.0f), ImGuiCond_Once);
   ImGui::SetNextWindowCollapsed(0, ImGuiCond_Once);
   ImGui::SetNextWindowPos(ImVec2(50.0f, 50.0f), ImGuiCond_Once);
   ImGui::SetNextWindowBgAlpha(0.2f);
@@ -61,6 +61,14 @@ void renderMainPanel() {
     ImGui::Text("%s", "-------------------- Miscellaneous ---------------------");
     if ((isStateSwitched = ImGui::Button(isPaused ? "Start" : "Stop"))) isPaused = !isPaused;
     ImGui::Text("Current framerate: %.0f", ImGui::GetIO().Framerate);
+
+    ImGui::Text("%s", "---------------------- Bonus Mode ----------------------");
+    ImGui::RadioButton("None", &currentBonusMode, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Bonus 1", &currentBonusMode, 1);
+    ImGui::SameLine();
+    ImGui::RadioButton("Bonus 2", &currentBonusMode, 2);
+
   }
   ImGui::End();
 }

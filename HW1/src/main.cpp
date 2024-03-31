@@ -176,6 +176,7 @@ int main() {
     cloth.computeExternalForce();
     cloth.computeSpringForce();
     spheres.collide(&cloth);
+    cloth.bonusConstraint();
   };
 
   ExplicitEuler explicitEuler;
@@ -213,16 +214,17 @@ int main() {
     }
 
     // Fix corners
-    for (int i = 0; i < 4; i++) {
-      int idx = cornerIndices[i];
-      if (pin[i]) {
-        cloth.particles().mass(idx) = 0.0f;
-        cloth.particles().velocity(idx).setZero();
-        cloth.particles().acceleration(idx).setZero();
-      } else {
-        cloth.particles().mass(idx) = 1.0f;
+    if (currentBonusMode == 0)
+      for (int i = 0; i < 4; i++) {
+        int idx = cornerIndices[i];
+        if (pin[i]) {
+          cloth.particles().mass(idx) = 0.0f;
+          cloth.particles().velocity(idx).setZero();
+          cloth.particles().acceleration(idx).setZero();
+        } else {
+          cloth.particles().mass(idx) = 1.0f;
+        }
       }
-    }
 
     // Set velocity of the sphere
     spheres.setVelocity(0, vel);

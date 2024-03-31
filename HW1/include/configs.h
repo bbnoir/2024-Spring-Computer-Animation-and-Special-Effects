@@ -40,3 +40,4 @@ extern bool isPaused;
 extern bool isStateSwitched;
 
 extern int currentIntegrator;
+extern int currentBonusMode;

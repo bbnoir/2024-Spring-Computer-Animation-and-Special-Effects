@@ -26,3 +26,4 @@ bool isPaused = true;
 bool isStateSwitched = false;
 
 int currentIntegrator = 0;
+int currentBonusMode = 0;

@@ -243,3 +243,34 @@ void Cloth::computeNormal() {
   normals.colwise().normalize();
   normalBuffer.load(0, particlesPerEdge * particlesPerEdge * sizeof(float) * 4, normals.data());
 }
+
+void Cloth::bonusConstraint() {
+  int cornerIndices[4] = {0, particlesPerEdge - 1, particlesPerEdge*(particlesPerEdge - 1),
+                          particlesPerEdge* particlesPerEdge - 1};
+  switch (currentBonusMode)
+  {
+  case 1: // Fix one edge
+    for (int i = 0; i < particlesPerEdge; ++i) {
+      _particles.mass(i) = 0.0f;
+      _particles.velocity(i).setZero();
+      _particles.acceleration(i).setZero();
+    }
+    break;
+  case 2: // Constraint one edge to move in a line
+    _particles.mass(cornerIndices[2]) = 1.0f;
+    _particles.mass(cornerIndices[3]) = 1.0f;
+    for (int i = 0; i < particlesPerEdge; ++i) {
+      _particles.mass(i) = 1.0f;
+      // fix y and z
+      _particles.position(i)(1) = 1.0f;
+      _particles.position(i)(2) = -1.0f;
+      _particles.velocity(i)(1) = 0.0f;
+      _particles.velocity(i)(2) = 0.0f;
+      _particles.acceleration(i)(1) = 0.0f;
+      _particles.acceleration(i)(2) = 0.0f;
+    }
+    break;
+  default:
+    break;
+  }
+}
