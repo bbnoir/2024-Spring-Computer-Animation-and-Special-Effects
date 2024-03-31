@@ -190,6 +190,30 @@ void Cloth::computeSpringForce() {
   //   2. Use a.normalize() to normalize a inplace.
   //          a.normalized() will create a new vector.
   //   3. Use a.dot(b) to get dot product of a and b.
+
+  for (const Spring& spring : _springs) {
+    int startIndex = spring.startParticleIndex();
+    int endIndex = spring.endParticleIndex();
+
+    Eigen::Vector4f startPos = _particles.position(startIndex);
+    Eigen::Vector4f endPos = _particles.position(endIndex);
+
+    Eigen::Vector4f displacement = endPos - startPos;
+    float displacementNorm = displacement.norm();
+
+    Eigen::Vector4f displacementNormalized = displacement.normalized();
+
+    float springForceMagnitude = springCoef * (displacementNorm - spring.length());
+    Eigen::Vector4f springForce = springForceMagnitude * displacementNormalized;
+
+    float damperForceMagnitude = damperCoef * displacement.dot(_particles.velocity(endIndex) - _particles.velocity(startIndex));
+    Eigen::Vector4f damperForce = damperForceMagnitude * displacementNormalized;
+
+    Eigen::Vector4f totalForce = springForce + damperForce;
+
+    _particles.acceleration(startIndex) += totalForce * _particles.inverseMass(startIndex);
+    _particles.acceleration(endIndex) -= totalForce * _particles.inverseMass(endIndex);
+  }
 }
 
 void Cloth::collide(Shape* shape) { shape->collide(this); }
