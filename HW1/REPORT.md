@@ -168,11 +168,22 @@ for (int i = 0; i < particles.size(); i++) {
 
 ### 1. The difference between integrators
 
+Through experiments among the four integrators, the time steps at which the simulation becomes unstable and the fps on my laptop are as follows:
+
+| Integrator       | Unstable Time Step | FPS               |
+|------------------|-------------------|-------------------|
+| Explicit Euler   | 0.001             | 144               |
+| Implicit Euler   | 0.0006            | 144               |
+| Midpoint Method  | 0.0011            | 144               |
+| Runge-Kutta 4th  | 0.0015            | 77                |
+
+The results show that the Runge-Kutta 4th Order integrator is the most accurate among the four, but also the most computationally expensive. The Explicit Euler integrator is the simplest but not stable for large time steps. The Implicit Euler integrator is unstable at relatively small time steps in my experiment, which is different from the theory. Observing that the Midpoint Method integrator looks more stable than Explicit Euler Method, I think the Implicit Euler integrator may have some problems when getting the next state.
+
 ### 2. Effect of parameters
 
-1. **springCoef**:
+1. **springCoef**: The springCoef parameter controls the stiffness of the springs. When the springCoef is small, the cloth is more flexible and the simulation is more stable. When the springCoef is large, the cloth is more rigid and the simulation is less stable.
 
-2. **damperCoef**:
+2. **damperCoef**: The damperCoef parameter controls the damping of the springs. When the damperCoef is small, the cloth oscillates more and the simulation is less stable. When the damperCoef is large, the cloth oscillates less and the simulation is more stable.
 
 ## Bonus
 
