@@ -27,6 +27,17 @@ bool pin[4] = {true, true, true, true};
 int cornerIndices[4] = {0, particlesPerEdge - 1, particlesPerEdge*(particlesPerEdge - 1),
                         particlesPerEdge* particlesPerEdge - 1};
 
+// for bonus mode
+std::vector<int> tableIndices;
+void initTableIndicds() {
+  for (int i = 0; i < particlesPerEdge; i++)
+    for (int j = 0; j < particlesPerEdge; j++)
+    {
+      if (std::abs(i - particlesPerEdge / 2) <= 6 && std::abs(j - particlesPerEdge / 2) <= 6)
+        tableIndices.push_back(i * particlesPerEdge + j);
+    }
+}
+
 // Velocity of the sphere
 Eigen::Vector4f vel(0, 0, 0, 0);
 
@@ -95,6 +106,7 @@ void loadTexture(unsigned int& texture, const char* fileName) {
 }
 
 int main() {
+  initTableIndicds();
   // Initialize OpenGL context.
   OpenGLContext& context = OpenGLContext::getContext();
   // TODO: change the title to your student ID
@@ -176,7 +188,6 @@ int main() {
     cloth.computeExternalForce();
     cloth.computeSpringForce();
     spheres.collide(&cloth);
-    cloth.bonusConstraint();
   };
 
   ExplicitEuler explicitEuler;
@@ -189,6 +200,8 @@ int main() {
   // Backup initial state
   Particles initialCloth = cloth.particles();
   Particles initialSpheres = spheres.particles();
+
+  int prevBonusMode = -1;
 
   while (!glfwWindowShouldClose(window)) {
     // Polling events.
@@ -225,6 +238,48 @@ int main() {
           cloth.particles().mass(idx) = 1.0f;
         }
       }
+
+    // Change Bonus Mode
+    if (prevBonusMode != currentBonusMode) {
+      cloth.particles() = initialCloth;
+      spheres.particles() = initialSpheres;
+      prevBonusMode = currentBonusMode;
+      switch (currentBonusMode)
+      {
+      case 1: // fix one edge
+        for (int i = 0; i < 4; i++) {
+          int idx = cornerIndices[i];
+          cloth.particles().mass(idx) = 1.0f;
+        }
+        for (int i = 0; i < particlesPerEdge; i++) {
+          cloth.particles().mass(i) = 0.0f;
+        }
+        break;
+      case 2: // constrain one edge to x-axis
+        for (int i = 0; i < 4; i++) {
+          int idx = cornerIndices[i];
+          cloth.particles().mass(idx) = 1.0f;
+        }
+        for (int i = 0; i < particlesPerEdge; i++) {
+          cloth.particles().constraint(i)(1) = 0.0f;
+          cloth.particles().constraint(i)(2) = 0.0f;
+          cloth.particles().constraint(i)(3) = 0.0f;
+        }
+        break;
+      case 3: // constrain a table to x-axis and z-axis
+        for (int i = 0; i < 4; i++) {
+          int idx = cornerIndices[i];
+          cloth.particles().mass(idx) = 1.0f;
+        }
+        for (int idx : tableIndices) {
+          cloth.particles().constraint(idx)(1) = 0.0f;
+          cloth.particles().constraint(idx)(3) = 0.0f;
+        }
+        break;
+      default:
+        break;
+      }
+    }
 
     // Set velocity of the sphere
     spheres.setVelocity(0, vel);

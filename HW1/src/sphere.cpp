@@ -148,7 +148,10 @@ void Spheres::collide(Cloth* cloth) {
 
             Eigen::Vector4f vb = (normalVeli * sphereMass + normalVelj * clothMass + coefRestitution * sphereMass * (normalVeli - normalVelj)) / (sphereMass + clothMass);
             cloth->particles().velocity(j) = tangentVelj + vb;
-
+            // constraint
+            for (int k = 0; k < 4; ++k) {
+              cloth->particles().velocity(j)(k) *= cloth->particles().constraint(j)(k);
+            }
             // correction
             Eigen::Vector4f correctionVec = (correction - distNorm + radius) * normal;
             cloth->particles().position(j) += correctionVec;

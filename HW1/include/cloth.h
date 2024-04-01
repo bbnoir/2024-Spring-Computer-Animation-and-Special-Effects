@@ -48,12 +48,6 @@ class Cloth final : public Shape {
    */
   void collide(Spheres* sphere) override;
 
-  /**
-   * @brief Bonus: Add constraints to the cloth.
-   *
-   */
-  void bonusConstraint();
-
  private:
   /**
    * @brief Initialize the model, setting OpenGL related buffers.

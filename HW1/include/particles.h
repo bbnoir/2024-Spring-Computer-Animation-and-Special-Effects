@@ -20,15 +20,19 @@ class Particles {
   Eigen::Ref<Eigen::Vector4f> acceleration(int i) { return _acceleration.col(i); }
   float& mass(int i) { return _mass[i]; }
   float inverseMass(int i) { return (_mass[i] == 0.0f) ? 0.0f : 1.0f / _mass[i]; }
+  Eigen::Ref<Eigen::Vector4f> constraint(int i) { return _constraint.col(i); }
 
   const float* getPositionData() const { return _position.data(); }
   const float* getVelocityData() const { return _velocity.data(); }
   const float* getAccelerationData() const { return _acceleration.data(); }
   const float* getMassData() const { return _mass.data(); }
+  const float* getConstraintData() const { return _constraint.data(); }
 
  private:
   Eigen::Matrix4Xf _position;
   Eigen::Matrix4Xf _velocity;
   Eigen::Matrix4Xf _acceleration;
   std::vector<float> _mass;
+  // Bonus: Constraint matrix
+  Eigen::Matrix4Xf _constraint;
 };

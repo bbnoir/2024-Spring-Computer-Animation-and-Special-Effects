@@ -65,9 +65,11 @@ void renderMainPanel() {
     ImGui::Text("%s", "---------------------- Bonus Mode ----------------------");
     ImGui::RadioButton("None", &currentBonusMode, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Bonus 1", &currentBonusMode, 1);
+    ImGui::RadioButton("Flag", &currentBonusMode, 1);
     ImGui::SameLine();
-    ImGui::RadioButton("Bonus 2", &currentBonusMode, 2);
+    ImGui::RadioButton("Curtain", &currentBonusMode, 2);
+    ImGui::SameLine();
+    ImGui::RadioButton("Table", &currentBonusMode, 3);
 
   }
   ImGui::End();
