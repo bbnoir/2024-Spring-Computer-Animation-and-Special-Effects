@@ -187,4 +187,34 @@ The results show that the Runge-Kutta 4th Order integrator is the most accurate 
 
 ## Bonus
 
+### 1. Introduction
+
+For the bonus feature, I implement constraints on some particles of the cloth. There are three bonus features:
+
+1. **Flag**: constrain the front edge of the cloth to the initial position.
+2. **Curtain**: constrain the front edge of the cloth to **x-axis**.
+3. **Table**: constrain particles inside a circle of cloth to **x-z plane**.
+
+### 2. Implementation
+
+To implement the bonus feature, I add a new element `constraint` to the particle class. The constraint is a 4x1 vector, corresponding to the axises. When the constraint is all one, the particle is free. When some elements of the constraint are zero, the particle is constrained to the corresponding axis. I also modify the function `computeExternalForces` and `computeSpringForces` to handle the constraints. In these functions, the acceleration and velocity of the particles are set to zero if the corresponding element of the constraint is zero.
+
+To demonstrate the bonus feature, I add a new switch on the gui panel to select the bonus feature.
+
+### 3. Demonstration
+
+#### Flag
+![Flag](img/flag.png)
+
+#### Curtain
+![Curtain](img/curtain.png)
+
+#### Table
+![Table](img/table.png)
+
+#### Table moving
+![Table2](img/moving_table.png)
+
 ## Conclusion
+
+In this homework, I implement particle systems with different integrators and parameters. By simulating the motion of cloth and collision with a sphere, I analyze the effect of integrators and parameters on the simulation. Finally, I implement a bonus feature to constrain some particles of the cloth. Through this homework, I have a better understanding of the particle system and the effect of integrators and parameters on the simulation. Though in the real work, the simulation may be more complex and need not do the simulation from scratch, the basic concepts and methods are still useful. Also, I have lots of fun doing this homework.
