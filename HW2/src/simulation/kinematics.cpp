@@ -25,13 +25,11 @@ void forwardSolver(const acclaim::Posture& posture, acclaim::Bone* bone) {
     //      then x degrees along x - axis
     if (bone->idx == 0) {
         bone->start_position = posture.bone_translations[bone->idx];
+        bone->rotation = bone->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[bone->idx]);
         bone->end_position = posture.bone_translations[bone->idx];
     } else {
         bone->start_position = bone->parent->end_position;
-        bone->rotation = bone->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[bone->idx]);
-        for (acclaim::Bone* itr = bone->parent; itr != nullptr; itr = itr->parent) {
-            bone->rotation = (itr->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[itr->idx])) * bone->rotation;
-        }
+        bone->rotation = bone->parent->rotation * (bone->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[bone->idx]));
         bone->end_position = bone->rotation * (bone->dir * bone->length) + bone->start_position;
     }
     for (acclaim::Bone* child = bone->child; child != nullptr; child = child->sibling) {
