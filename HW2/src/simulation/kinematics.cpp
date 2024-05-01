@@ -5,9 +5,6 @@
 #include "acclaim/bone.h"
 #include "util/helper.h"
 
-#include <map>
-#include <stack>
-
 namespace kinematics {
 
 void forwardSolver(const acclaim::Posture& posture, acclaim::Bone* bone) {
@@ -26,32 +23,19 @@ void forwardSolver(const acclaim::Posture& posture, acclaim::Bone* bone) {
     //      e.g. rotateDegreeXYZ(x, y, z) means:
     //      x, y and z are presented in degree rotate z degrees along z - axis first, then y degrees along y - axis, and
     //      then x degrees along x - axis
-    std::map<int, bool> visit;
-    std::stack<acclaim::Bone*> q;
-    visit[bone->idx] = true;
-    bone->start_position = posture.bone_translations[bone->idx];
-    bone->end_position = posture.bone_translations[bone->idx];
-    q.push(bone);
-
-    while (!q.empty()) {
-        acclaim::Bone* t = q.top();
-        q.pop();
-        if (t->idx != 0) {
-            t->start_position = t->parent->end_position;
-            Eigen::Affine3d rot = t->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[t->idx]);
-            for (acclaim::Bone* itr = t->parent; itr != nullptr; itr = itr->parent) {
-                rot = (itr->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[itr->idx])) * rot;
-            }
-
-            t->rotation = rot;
-            t->end_position = t->rotation * (t->dir * t->length) + t->start_position;
+    if (bone->idx == 0) {
+        bone->start_position = posture.bone_translations[bone->idx];
+        bone->end_position = posture.bone_translations[bone->idx];
+    } else {
+        bone->start_position = bone->parent->end_position;
+        bone->rotation = bone->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[bone->idx]);
+        for (acclaim::Bone* itr = bone->parent; itr != nullptr; itr = itr->parent) {
+            bone->rotation = (itr->rot_parent_current * util::rotateDegreeZYX(posture.bone_rotations[itr->idx])) * bone->rotation;
         }
-        for (acclaim::Bone* itr = t->child; itr != nullptr; itr = itr->sibling) {
-            if (!visit[itr->idx]) {
-                visit[itr->idx] = true;
-                q.push(itr);
-            }
-        }
+        bone->end_position = bone->rotation * (bone->dir * bone->length) + bone->start_position;
+    }
+    for (acclaim::Bone* child = bone->child; child != nullptr; child = child->sibling) {
+        forwardSolver(posture, child);
     }
 }
 
