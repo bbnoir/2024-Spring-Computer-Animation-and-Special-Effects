@@ -47,7 +47,7 @@ Eigen::VectorXd pseudoInverseLinearSolver(const Eigen::Matrix4Xd& Jacobian, cons
     //   2. Some of them have some limitation, if you use that method you should check it.
     Eigen::VectorXd deltatheta(Jacobian.cols());
     deltatheta.setZero();
-
+    deltatheta = Jacobian.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(target);
     return deltatheta;
 }
 
@@ -67,9 +67,9 @@ Eigen::VectorXd pseudoInverseLinearSolver(const Eigen::Matrix4Xd& Jacobian, cons
 bool inverseJacobianIKSolver(std::vector<Eigen::Vector4d> target_pos, acclaim::Bone* end_bone,
                              acclaim::Posture& posture, std::vector<std::vector<Eigen::Vector4d*>>& jointChains,
                              std::vector<std::vector<acclaim::Bone*>>& boneChains, Eigen::Vector4d currentBasePos) {
-    constexpr int max_iteration = 1000;
+    constexpr int max_iteration = 10000;
     constexpr double epsilon = 1E-3;
-    constexpr double step = 0.1;
+    constexpr double step = 0.4;
     // Since bone stores in bones[i] that i == bone->idx, we can use bone - bone->idx to find bones[0] which is the
     // root.
     acclaim::Bone* root_bone = end_bone - end_bone->idx;
@@ -100,6 +100,17 @@ bool inverseJacobianIKSolver(std::vector<Eigen::Vector4d> target_pos, acclaim::B
             //   2. jacobian.col(/* some column index */) = /* jacobian column */
 
             for (long long i = 0; i < bone_num; i++) {
+                Eigen::Matrix4d a = boneChains[chainIdx][i]->rotation.matrix();
+                Eigen::Vector4d arm = *jointChains[chainIdx][0] - *jointChains[chainIdx][i+1];
+                if (boneChains[chainIdx][i]->dofrx) {
+                    Jacobian.col(3 * i) = a.col(0).normalized().cross3(arm);
+                }
+                if (boneChains[chainIdx][i]->dofry) {
+                    Jacobian.col(3 * i + 1) = a.col(1).normalized().cross3(arm);
+                }
+                if (boneChains[chainIdx][i]->dofrz) {
+                    Jacobian.col(3 * i + 2) = a.col(2).normalized().cross3(arm);
+                }
             }
 
             Eigen::VectorXd deltatheta = step * pseudoInverseLinearSolver(Jacobian, desiredVector);
@@ -112,6 +123,7 @@ bool inverseJacobianIKSolver(std::vector<Eigen::Vector4d> target_pos, acclaim::B
             //   1. You cannot ignore rotation limit of the bone.
 
             for (long long i = 0; i < bone_num; i++) {
+                posture.bone_rotations[boneChains[chainIdx][i]->idx] += deltatheta.segment(3 * i, 3);
             }
 
             forwardSolver(posture, root_bone);
