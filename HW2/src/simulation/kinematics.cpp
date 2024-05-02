@@ -124,6 +124,24 @@ bool inverseJacobianIKSolver(std::vector<Eigen::Vector4d> target_pos, acclaim::B
 
             for (long long i = 0; i < bone_num; i++) {
                 posture.bone_rotations[boneChains[chainIdx][i]->idx] += deltatheta.segment(3 * i, 3);
+                if (boneChains[chainIdx][i]->rxmax < posture.bone_rotations[boneChains[chainIdx][i]->idx](0)) {
+                    posture.bone_rotations[boneChains[chainIdx][i]->idx](0) = boneChains[chainIdx][i]->rxmax;
+                }
+                if (boneChains[chainIdx][i]->rxmin > posture.bone_rotations[boneChains[chainIdx][i]->idx](0)) {
+                    posture.bone_rotations[boneChains[chainIdx][i]->idx](0) = boneChains[chainIdx][i]->rxmin;
+                }
+                if (boneChains[chainIdx][i]->rymax < posture.bone_rotations[boneChains[chainIdx][i]->idx](1)) {
+                    posture.bone_rotations[boneChains[chainIdx][i]->idx](1) = boneChains[chainIdx][i]->rymax;
+                }
+                if (boneChains[chainIdx][i]->rymin > posture.bone_rotations[boneChains[chainIdx][i]->idx](1)) {
+                    posture.bone_rotations[boneChains[chainIdx][i]->idx](1) = boneChains[chainIdx][i]->rymin;
+                }
+                if (boneChains[chainIdx][i]->rzmax < posture.bone_rotations[boneChains[chainIdx][i]->idx](2)) {
+                    posture.bone_rotations[boneChains[chainIdx][i]->idx](2) = boneChains[chainIdx][i]->rzmax;
+                }
+                if (boneChains[chainIdx][i]->rzmin > posture.bone_rotations[boneChains[chainIdx][i]->idx](2)) {
+                    posture.bone_rotations[boneChains[chainIdx][i]->idx](2) = boneChains[chainIdx][i]->rzmin;
+                }
             }
 
             forwardSolver(posture, root_bone);
