@@ -68,8 +68,8 @@ bool inverseJacobianIKSolver(std::vector<Eigen::Vector4d> target_pos, acclaim::B
                              acclaim::Posture& posture, std::vector<std::vector<Eigen::Vector4d*>>& jointChains,
                              std::vector<std::vector<acclaim::Bone*>>& boneChains, Eigen::Vector4d currentBasePos) {
     constexpr int max_iteration = 10000;
-    constexpr double epsilon = 1E-1;
-    constexpr double step = 0.3;
+    constexpr double epsilon = 1E-2;
+    constexpr double step = 0.4;
     // Since bone stores in bones[i] that i == bone->idx, we can use bone - bone->idx to find bones[0] which is the
     // root.
     acclaim::Bone* root_bone = end_bone - end_bone->idx;
