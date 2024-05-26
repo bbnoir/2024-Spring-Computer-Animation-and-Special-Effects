@@ -186,6 +186,36 @@ void MotionGraph::constructGraph() {
         // 
         //       4. It is okay for the nodes which represent the final segment of the motion clips to have zero outgoing edges.
         //          You can also prune some existing edges to get a better result.
+        bool isEnd = isInVector(EndSegments, i);
+        int outEdges = 0;
+        std::vector<int> outEdgeIdx;
+        double distSum = 0.0;
+        std::vector<double> distVector;
+        for (int j = 0; j < numNodes; j++) {
+            if (i == j) continue;
+            if (distMatrix[i][j] < edgeCostThreshold) {
+                outEdges++;
+                outEdgeIdx.push_back(j);
+                distSum += distMatrix[i][j];
+                distVector.push_back(distMatrix[i][j]);
+            }
+        }
+        if (outEdges == 0) {
+            if (!isEnd) {
+                m_graph[i].addEdgeTo(i + 1, 1.0);
+            }
+        } else {
+            if (isEnd) {
+                for (int j = 0; j < outEdges; j++) {
+                    m_graph[i].addEdgeTo(outEdgeIdx[j], distVector[j] / distSum);
+                }
+            } else {
+                m_graph[i].addEdgeTo(i + 1, 0.5);
+                for (int j = 0; j < outEdges; j++) {
+                    m_graph[i].addEdgeTo(outEdgeIdx[j], 0.5 * distVector[j] / distSum);
+                }
+            }
+        }
     }
 }
 

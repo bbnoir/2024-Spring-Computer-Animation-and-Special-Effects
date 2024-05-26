@@ -85,6 +85,25 @@ void Motion::transform(double newFacing, const Eigen::Vector3d &newPosition) {
     // Task: Transform the whole motion segment so that the root bone of the first posture(first frame) 
     //       of the motion is located at newPosition, and its facing be newFacing.
     //       The whole motion segment must remain continuous.
+
+    double oldFacing = postures[0].getFacingAngle();
+    Eigen::Quaterniond rot = util::rotateDegreeZYX(0, newFacing - oldFacing, 0);
+    Eigen::Matrix3d rotMat = rot.toRotationMatrix();
+    Eigen::Vector3d frameZeroTrans = postures[0].bone_translations[0].head<3>();
+    const int frameNum = getFrameNum();
+    for (int i = 0; i < frameNum; i++)
+    {
+        // Eigen::Quaterniond rootBoneRot = util::rotateDegreeXYZ(postures[i].bone_rotations[0]);
+        // postures[i].bone_rotations[0].head<3>() = (rot * rootBoneRot).toRotationMatrix().eulerAngles(0, 1, 2);
+        // postures[i].bone_rotations[0] = util::toDegree(postures[i].bone_rotations[0]);
+        Posture& posture = postures[i];
+        posture.bone_rotations[0].x() = 0;
+        posture.bone_rotations[0].y() += newFacing - oldFacing;
+        posture.bone_rotations[0].z() = 0;
+        posture.bone_rotations[0].w() = 0;
+        posture.bone_translations[0].head<3>() = rotMat * (posture.bone_translations[0].head<3>() - frameZeroTrans) + newPosition;
+    }
+
 }
 
 Motion blend(Motion bm1, Motion bm2, const std::vector<double> &weight) {
@@ -93,6 +112,25 @@ Motion blend(Motion bm1, Motion bm2, const std::vector<double> &weight) {
     //       bm1: tail of m1, bm2: head of m2
     //       You can assume that m2's root position and orientation is aleady aligned with m1 before blending.
     //       In other words, m2.transform(...) will be called before m1.blending(m2, blendWeight, blendWindowSize) is called
+
+    int frameNum = bm2.getFrameNum();
+    Motion bm(bm1);
+    for (int i = 0; i < frameNum; i++)
+    {
+        Posture& posture1 = bm1.getPosture(i);
+        Posture& posture2 = bm2.getPosture(i);
+        Posture& posture = bm.getPosture(i);
+        const double w = weight.at(i);
+        // linear interpolation for bone translation
+        posture.bone_translations[0] = posture1.bone_translations[0] * (1-w) + posture2.bone_translations[0] * w;
+        // slerp for bone rotation
+        Eigen::Quaterniond q1 = util::rotateDegreeZYX(posture1.bone_rotations[0]);
+        Eigen::Quaterniond q2 = util::rotateDegreeZYX(posture2.bone_rotations[0]);
+        Eigen::Quaterniond q = q1.slerp(1-w, q2);
+        posture.bone_rotations[0].head<3>() = q.toRotationMatrix().eulerAngles(0, 1, 2);
+        posture.bone_rotations[0] = util::toDegree(posture.bone_rotations[0]);
+    }
+    return bm;
 }
 
 Motion Motion::blending(Motion &m2, const std::vector<double> &blendWeight, int blendWindowSize) {
