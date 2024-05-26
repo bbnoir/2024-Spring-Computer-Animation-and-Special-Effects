@@ -80,28 +80,32 @@ void Motion::forwardkinematics(int frame_idx) {
     skeleton->setModelMatrices();
 }
 
-void Motion::transform(double newFacing, const Eigen::Vector3d &newPosition) {
+void Motion::transform(const Eigen::Vector4d &newFacing, const Eigen::Vector4d &newPosition) {
     // **TODO**
     // Task: Transform the whole motion segment so that the root bone of the first posture(first frame) 
     //       of the motion is located at newPosition, and its facing be newFacing.
     //       The whole motion segment must remain continuous.
 
-    double oldFacing = postures[0].getFacingAngle();
-    Eigen::Quaterniond rot = util::rotateDegreeZYX(0, newFacing - oldFacing, 0);
-    Eigen::Matrix3d rotMat = rot.toRotationMatrix();
-    Eigen::Vector3d frameZeroTrans = postures[0].bone_translations[0].head<3>();
+    Eigen::Vector4d oldFacing = postures[0].bone_rotations[0];
+    Eigen::Matrix3d oldRot = util::rotateDegreeZYX(oldFacing).toRotationMatrix();
+    Eigen::Matrix3d newRot = util::rotateDegreeZYX(newFacing).toRotationMatrix();
+    double oldAngle = atan2(oldRot(0, 2), oldRot(2, 2));
+    double newAngle = atan2(newRot(0, 2), newRot(2, 2));
+    Eigen::Matrix3d rotMat = util::rotateRadianZYX(0, newAngle - oldAngle, 0).toRotationMatrix();
+    Eigen::Vector4d oldPosition = postures[0].bone_translations[0];
     const int frameNum = getFrameNum();
     for (int i = 0; i < frameNum; i++)
     {
-        // Eigen::Quaterniond rootBoneRot = util::rotateDegreeXYZ(postures[i].bone_rotations[0]);
-        // postures[i].bone_rotations[0].head<3>() = (rot * rootBoneRot).toRotationMatrix().eulerAngles(0, 1, 2);
-        // postures[i].bone_rotations[0] = util::toDegree(postures[i].bone_rotations[0]);
-        Posture& posture = postures[i];
-        posture.bone_rotations[0].x() = 0;
-        posture.bone_rotations[0].y() += newFacing - oldFacing;
-        posture.bone_rotations[0].z() = 0;
-        posture.bone_rotations[0].w() = 0;
-        posture.bone_translations[0].head<3>() = rotMat * (posture.bone_translations[0].head<3>() - frameZeroTrans) + newPosition;
+        // rotation
+        Eigen::Vector4d &curRot = postures[i].bone_rotations[0];
+        Eigen::Matrix3d curRotMat = rotMat * util::rotateDegreeZYX(curRot).toRotationMatrix();
+        curRot.head<3>() = curRotMat.eulerAngles(2, 1, 0);
+        curRot = util::toDegree(curRot);
+
+        // translation
+        Eigen::Vector4d &curPos = postures[i].bone_translations[0];
+        Eigen::Vector3d curPosVec = (curPos - oldPosition).head<3>();
+        curPos.head<3>() = (rotMat * curPosVec + newPosition.head<3>());
     }
 
 }
@@ -127,7 +131,7 @@ Motion blend(Motion bm1, Motion bm2, const std::vector<double> &weight) {
         Eigen::Quaterniond q1 = util::rotateDegreeZYX(posture1.bone_rotations[0]);
         Eigen::Quaterniond q2 = util::rotateDegreeZYX(posture2.bone_rotations[0]);
         Eigen::Quaterniond q = q1.slerp(1-w, q2);
-        posture.bone_rotations[0].head<3>() = q.toRotationMatrix().eulerAngles(0, 1, 2);
+        posture.bone_rotations[0].head<3>() = q.toRotationMatrix().eulerAngles(2, 1, 0);
         posture.bone_rotations[0] = util::toDegree(posture.bone_rotations[0]);
     }
     return bm;

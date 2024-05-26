@@ -192,7 +192,7 @@ void MotionGraph::constructGraph() {
         double distSum = 0.0;
         std::vector<double> distVector;
         for (int j = 0; j < numNodes; j++) {
-            if (i == j) continue;
+            if (i == j || j == i + 1) continue;
             if (distMatrix[i][j] < edgeCostThreshold) {
                 outEdges++;
                 outEdgeIdx.push_back(j);
@@ -247,15 +247,13 @@ void MotionGraph::traverse() {
     } else {
         printf("rand: %lf, sum: %lf, jump from %d to %d\n", prob, sum, currIdx, nextIdx);
         Posture lastPose = currSegment.getPosture(currSegment.getFrameNum() - blendWindowSize);
-        double faceAng = lastPose.getFacingAngle();
-        segmentList[nextIdx].transform(faceAng, lastPose.bone_translations[0].head<3>());
+        segmentList[nextIdx].transform(lastPose.bone_rotations[0], lastPose.bone_translations[0]);
         nextSegment = segmentList[nextIdx];
         Motion bm = currSegment.blending(nextSegment, blendWeights, blendWindowSize);
 
         for (int i = nextIdx; isNotInVector(EndSegments, i);) {
             lastPose = segmentList[i].getPosture(segmentList[i].getFrameNum() - 1);
-            faceAng = lastPose.getFacingAngle();
-            segmentList[++i].transform(faceAng, lastPose.bone_translations[0].head<3>());
+            segmentList[++i].transform(lastPose.bone_rotations[0], lastPose.bone_translations[0]);
         }
 
         Motion tempCurr(currSegment);
