@@ -119,12 +119,16 @@ Motion blend(Motion bm1, Motion bm2, const std::vector<double> &weight) {
         Posture& posture1 = bm1.getPosture(i);
         Posture& posture2 = bm2.getPosture(i);
         const double w2 = weight.at(i), w1 = 1 - w2;
-        posture2.bone_translations[0] = posture1.bone_translations[0] * w1 + posture2.bone_translations[0] * w2;
-        Eigen::Quaterniond q1 = util::rotateDegreeZYX(posture1.bone_rotations[0]);
-        Eigen::Quaterniond q2 = util::rotateDegreeZYX(posture2.bone_rotations[0]);
-        q2 = q1.slerp(w2, q2);
-        Eigen::Vector3d euler = q2.toRotationMatrix().eulerAngles(2, 1, 0) * util::rad2deg;
-        posture2.bone_rotations[0].head<3>() = Eigen::Vector3d(euler[2], euler[1], euler[0]);
+        const int boneNum = posture1.bone_rotations.size();
+        for (int j = 0; j < boneNum; j++)
+        {
+            posture2.bone_translations[j] = posture1.bone_translations[j] * w1 + posture2.bone_translations[j] * w2;
+            Eigen::Quaterniond q1 = util::rotateDegreeZYX(posture1.bone_rotations[j]);
+            Eigen::Quaterniond q2 = util::rotateDegreeZYX(posture2.bone_rotations[j]);
+            q2 = q1.slerp(w2, q2);
+            Eigen::Vector3d euler = q2.toRotationMatrix().eulerAngles(2, 1, 0) * util::rad2deg;
+            posture2.bone_rotations[j].head<3>() = Eigen::Vector3d(euler[2], euler[1], euler[0]);
+        }
     }
     return bm2;
 }
